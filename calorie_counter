@@ -1,0 +1,60 @@
+import requests
+import datetime
+import os
+
+GENDER =YOUR GENDER
+WEIGHT = YOUR WEIGHT
+HEIGHT = YOUR HEIGHT
+AGE = YOUR AGE
+
+post_endpoint = "https://app.100daysofpython.dev/v1/nutrition/natural/exercise"
+API_KEY = os.environ['API_KEY']
+APP_ID = os.environ["APP_ID"]
+
+headers = {
+    "Content-Type": "application/json",
+    "x-app-id": os.environ["APP_ID"],
+    "x-app-key": os.environ["API_KEY"],
+}
+
+user_exercises = input("Tell me what exercise you have done today (with times): ")
+
+data = {
+    "query": user_exercises,
+    "weight_kg": WEIGHT,
+    "height_cm": HEIGHT,
+    "age": AGE,
+    "gender": GENDER,
+}
+
+response = requests.post(url=post_endpoint, json=data, headers=headers)
+result = response.json()
+print(result)
+
+sheety_url = os.environ["sheety_url"]
+
+today = datetime.date.today().strftime("%Y/%m/%d")
+time = datetime.datetime.now().strftime("%H/%M/%S")
+
+for exercise in result["exercises"]:
+
+    type_of_exercise = exercise["name"].title()
+    time_taken = exercise["duration_min"]
+    calories_burnt = exercise["nf_calories"]
+
+    params = {
+        "sheet1":{
+            "date": today,
+            "time": time,
+            "exercise": type_of_exercise,
+            "duration": time_taken,
+            "calories": calories_burnt
+        }
+    }
+
+    bearer_headers = {
+        "Authorization": f"Bearer {os.environ["TOKEN"]}",
+    }
+    response = requests.post(url=sheety_url, json=params, headers=bearer_headers)
+    sheet_result = response.json()
+    print(sheet_result)
